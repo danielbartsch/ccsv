@@ -1,5 +1,5 @@
 const calculate = require("./calculate.js")
-const { test, assertEqual, assertError } = require("./testfrm.js")
+const { test, assertEqual, assertError, run } = require("./testfrm.js")
 
 test("no calculations", () => {
   const file = [
@@ -246,3 +246,5 @@ test("avg len min max", () =>
       "sumo,2,4.5,,5.5",
     ].join("\n")
   ))
+
+run()

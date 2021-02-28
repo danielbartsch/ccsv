@@ -1,35 +1,45 @@
 let testFailures = 0
+
+const [, , testFilter = ""] = process.argv
+
 const BAIL_THRESHOLD = 1
 
 let suspendedOutput = []
 
 console.log(`● = success, ◌ = skipped, ⨯ = failed\n`)
 
+const tests = []
+
 const test = (name, func, skip = false) => {
-  if (skip) {
-    process.stdout.write(`◌ ${name}\n`)
-    return
-  }
-  const logHelper = console.log
-  console.log = (...rest) => suspendedOutput.push(...rest, "\n")
-  const beginning = Date.now()
-  try {
-    process.stdout.write(`… ${name}`)
-    func()
-    process.stdout.cursorTo(0)
-    process.stdout.write(`● ${name} (${Date.now() - beginning}ms)\n`)
-    suspendedOutput = []
-  } catch (error) {
-    process.stdout.cursorTo(0)
-    process.stdout.write(`⨯ ${name} (${Date.now() - beginning}ms)\n`)
-    if (suspendedOutput.length > 0) logHelper("\n", ...suspendedOutput)
-    console.error(error, "\n\n")
-    testFailures++
-    if (testFailures >= BAIL_THRESHOLD) {
-      process.exit(1)
-    }
-  }
-  console.log = logHelper
+  tests.push([
+    name,
+    () => {
+      if (skip) {
+        process.stdout.write(`◌ ${name}\n`)
+        return
+      }
+      const logHelper = console.log
+      console.log = (...rest) => suspendedOutput.push(...rest, "\n")
+      const beginning = Date.now()
+      try {
+        process.stdout.write(`… ${name}`)
+        func()
+        process.stdout.cursorTo(0)
+        process.stdout.write(`● ${name} (${Date.now() - beginning}ms)\n`)
+        suspendedOutput = []
+      } catch (error) {
+        process.stdout.cursorTo(0)
+        process.stdout.write(`⨯ ${name} (${Date.now() - beginning}ms)\n`)
+        if (suspendedOutput.length > 0) logHelper("\n", ...suspendedOutput)
+        console.error(error, "\n\n")
+        testFailures++
+        if (testFailures >= BAIL_THRESHOLD) {
+          process.exit(1)
+        }
+      }
+      console.log = logHelper
+    },
+  ])
 }
 
 const assertEqual = (a, b) => {
@@ -71,7 +81,18 @@ const assertError = (func) => {
   throw new Error("Asserted Error, but none was thrown")
 }
 
+const run = () => {
+  const testsToRun = tests.filter(([name]) => name.includes(testFilter))
+  if (testFilter) {
+    console.log(
+      `running ${testsToRun.length}/${tests.length} tests (filtering for '${testFilter}')`
+    )
+  }
+  testsToRun.forEach(([name, execute]) => execute())
+}
+
 module.exports = {
+  run,
   test,
   assertEqual,
   assertError,
