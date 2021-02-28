@@ -199,15 +199,20 @@ test("sum function relative", () =>
   assertEqual(
     calculate(
       [
-        "header1,header2",
+        "header1,header2,header3,header4",
         "10,=#-1:#0",
         "20,=#-1:#0",
         "30,=#-1:#0",
-        "40,=#-1:#0",
+        "40,30,20,10,=sum(##:#0)",
         "=sum(#0:##),=sum(#0:##)",
       ].join("\n")
     ),
-    ["header1,header2", "10,10", "20,20", "30,30", "40,40", "100,100"].join(
-      "\n"
-    )
+    [
+      "header1,header2,header3,header4",
+      "10,10",
+      "20,20",
+      "30,30",
+      "40,30,20,10,100",
+      "100,90",
+    ].join("\n")
   ))

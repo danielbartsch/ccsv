@@ -19,7 +19,7 @@ const calculate = (fileData, separator = ",") => {
     .join("\n")
 }
 
-const parseCell = (cell, columnIndex, rowIndex, headers, data) => {
+const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
   if (cell.startsWith("=")) {
     const cellExpression = cell.slice(1)
 
@@ -79,7 +79,7 @@ const resolveReference = (
       .substring(reference.indexOf("(") + 1, reference.lastIndexOf(")"))
       .split(";")
 
-    const columnValues = parameters.flatMap((parameter) => {
+    const values = parameters.flatMap((parameter) => {
       const { headerIndex, lineIndex, value } = parseReference(
         parameter,
         columnIndex,
@@ -88,20 +88,31 @@ const resolveReference = (
         data
       )
 
-      return data.flatMap((line, currentRowIndex) =>
-        rowIndex !== currentRowIndex
-          ? parseCell(
-              line[headerIndex],
-              columnIndex,
-              currentRowIndex,
-              headers,
-              data
-            )
-          : []
-      )
+      if (headerIndex != null && lineIndex == null) {
+        return data.flatMap((line, currentRowIndex) =>
+          rowIndex !== currentRowIndex
+            ? parseCell(
+                line[headerIndex],
+                headerIndex,
+                currentRowIndex,
+                headers,
+                data
+              )
+            : []
+        )
+      } else if (lineIndex != null && headerIndex == null) {
+        return data[lineIndex].flatMap((column, currentColumnIndex) =>
+          columnIndex !== currentColumnIndex
+            ? parseCell(column, currentColumnIndex, lineIndex, headers, data)
+            : []
+        )
+      }
     })
+
+    console.log("values", values)
+
     return functionName === "sum"
-      ? columnValues.reduce((sum, value) => sum + value, 0)
+      ? values.reduce((sum, value) => sum + value, 0)
       : 0
   }
 
@@ -139,8 +150,10 @@ const parseReference = (reference, columnIndex, rowIndex, headers, data) => {
     throw new Error(`Header \"${headerName}\" not found`)
 
   return {
-    headerIndex,
-    lineIndex: referencedRowIndex,
+    headerIndex: Number.isNaN(headerIndex) ? undefined : headerIndex,
+    lineIndex: Number.isNaN(referencedRowIndex)
+      ? undefined
+      : referencedRowIndex,
     value: data[referencedRowIndex] && data[referencedRowIndex][headerIndex],
   }
 }
