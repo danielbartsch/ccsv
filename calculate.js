@@ -21,43 +21,54 @@ const calculate = (fileData, separator = ",") => {
 
 const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
   if (cell.startsWith("=")) {
-    const cellExpression = cell.slice(1)
-
-    const [, match1, operator, match2] =
-      cellExpression.match(/(.*:[0-9]+|[0-9]+)(\+|-|\*|\/)(.*:[0-9]|[0-9]+)/) ||
-      []
-
-    const value1 = Number.parseFloat(
-      resolveReference(
-        match1 || cellExpression,
-        columnIndex,
-        rowIndex,
-        headers,
-        data
-      )
-    )
-    const value2 = Number.parseFloat(
-      resolveReference(
-        match2 || cellExpression,
-        columnIndex,
-        rowIndex,
-        headers,
-        data
-      )
+    const cellExpression = [
+      ["+", "+"],
+      [/(?<!#)-/, "-"],
+      ["*", "*"],
+      ["/", "/"],
+    ].reduce(
+      (acc, [operatorRegex, operator]) =>
+        acc.flatMap((part) =>
+          part
+            .split(operatorRegex)
+            .flatMap((element, index, array) =>
+              index === array.length - 1 ? [element] : [element, operator]
+            )
+        ),
+      [cell.slice(1)]
     )
 
-    switch (operator) {
-      case "+":
-        return value1 + value2
-      case "-":
-        return value1 - value2
-      case "*":
-        return value1 * value2
-      case "/":
-        return value1 / value2
-      default:
-        return value1
+    const values = cellExpression.map((expression) =>
+      ["+", "-", "*", "/"].includes(expression)
+        ? expression
+        : Number.parseFloat(
+            resolveReference(expression, columnIndex, rowIndex, headers, data)
+          )
+    )
+
+    if (values.length === 1) {
+      return values[0]
     }
+    const threeBuckets = chunk(values, 3).map(([value1, operator, value2]) => {
+      switch (operator) {
+        case "+":
+          return value1 + value2
+        case "-":
+          return value1 - value2
+        case "*":
+          return value1 * value2
+        case "/":
+          return value1 / value2
+        default:
+          return value1
+      }
+    })
+
+    if (threeBuckets.length === 1) {
+      return threeBuckets[0]
+    }
+
+    return undefined
   }
   return Number.isFinite(Number.parseFloat(cell))
     ? Number.parseFloat(cell)
@@ -171,3 +182,17 @@ const parseReference = (reference, columnIndex, rowIndex, headers, data) => {
 }
 
 module.exports = calculate
+
+function chunk(array, size = 3) {
+  if (array.length === 0) {
+    return []
+  }
+  var index = 0,
+    resIndex = 0,
+    result = Array(Math.ceil(array.length / size))
+
+  while (index < array.length) {
+    result[resIndex++] = array.slice(index, (index += size))
+  }
+  return result
+}

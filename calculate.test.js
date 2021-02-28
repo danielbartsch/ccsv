@@ -247,4 +247,10 @@ test("avg len min max", () =>
     ].join("\n")
   ))
 
+test("functions with operators", () =>
+  assertEqual(
+    calculate(["header1", "10", "20", "30", "=sum(#0:##)*2"].join("\n")),
+    ["header1", "10", "20", "30", "120"].join("\n")
+  ))
+
 run()
