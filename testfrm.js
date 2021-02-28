@@ -14,11 +14,14 @@ const test = (name, func, skip = false) => {
   console.log = (...rest) => suspendedOutput.push(...rest)
   const beginning = Date.now()
   try {
+    process.stdout.write(`… ${name}`)
     func()
-    process.stdout.write(`● (${Date.now() - beginning}ms) ${name}\n`)
+    process.stdout.cursorTo(0)
+    process.stdout.write(`● ${name} (${Date.now() - beginning}ms)\n`)
     suspendedOutput = []
   } catch (error) {
-    process.stdout.write(`⨯ (${Date.now() - beginning}ms) ${name}\n`)
+    process.stdout.cursorTo(0)
+    process.stdout.write(`⨯ ${name} (${Date.now() - beginning}ms)\n`)
     logHelper(...suspendedOutput)
     console.error(error, "\n\n")
     bail++
