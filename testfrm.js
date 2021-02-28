@@ -35,7 +35,10 @@ const test = (name, func, skip = false) => {
 const assertEqual = (a, b) => {
   if (!deepEqual(a, b)) {
     throw new Error(
-      `Asserted Equality, but \n"${a}" and \n"${b}"\nwere not equal`
+      `Asserted equality, but \n${a.replace(/\n/g, "\\n")}\n${b.replace(
+        /\n/g,
+        "\\n"
+      )}\nwere not equal`
     )
   }
 }

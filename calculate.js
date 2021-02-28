@@ -109,8 +109,6 @@ const resolveReference = (
       }
     })
 
-    console.log("values", values)
-
     return functionName === "sum"
       ? values.reduce((sum, value) => sum + value, 0)
       : 0
