@@ -64,11 +64,7 @@ const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
       }
     })
 
-    if (threeBuckets.length === 1) {
-      return threeBuckets[0]
-    }
-
-    return undefined
+    return eval(values.join(""))
   }
   return Number.isFinite(Number.parseFloat(cell))
     ? Number.parseFloat(cell)
@@ -91,7 +87,7 @@ const resolveReference = (
       .split(";")
 
     const values = parameters.flatMap((parameter) => {
-      const { headerIndex, lineIndex, value } = parseReference(
+      const { headerIndex, lineIndex } = parseReference(
         parameter,
         columnIndex,
         rowIndex,

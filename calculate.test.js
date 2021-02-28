@@ -45,25 +45,21 @@ test("quotient", () =>
     ["a", "30,3", "10,0.3333333333333333"].join("\n")
   ))
 
-test(
-  "multiple operators",
-  () =>
-    assertEqual(calculate(["a", "30,=a:1+a:2+a:2", "10,=a:2"].join("\n")), [
-      "a",
-      "30,50",
-      "10,10",
-    ]),
-  true
-)
+test("multiple operators", () =>
+  assertEqual(
+    calculate(
+      ["a", "=20+30+50,=10+20*10", "30,=a:1+a:2+a:2", "10,=a:2"].join("\n")
+    ),
+    ["a", "100,210", "30,160", "10,30"].join("\n")
+  ))
 
 test(
   "negating",
   () =>
-    assertEqual(calculate(["a", "30,=-a:1", "0,=a:1"].join("\n")), [
-      "a",
-      "30,-30",
-      "0,30",
-    ]),
+    assertEqual(
+      calculate(["a", "30,=-a:1", "0,=a:1"].join("\n")),
+      ["a", "30,-30", "0,30"].join("\n")
+    ),
   true
 )
 
