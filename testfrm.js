@@ -2,7 +2,7 @@ let testFailures = 0
 
 const [, , testFilter = ""] = process.argv
 
-const BAIL_THRESHOLD = 1
+const BAIL_THRESHOLD = Number.parseInt(process.env.BAIL) || 1
 
 let suspendedOutput = []
 
