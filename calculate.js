@@ -59,7 +59,9 @@ const parseCell = (cell, columnIndex, rowIndex, headers, data) => {
         return value1
     }
   }
-  return cell
+  return Number.isFinite(Number.parseFloat(cell))
+    ? Number.parseFloat(cell)
+    : cell
 }
 
 const resolveReference = (
@@ -69,12 +71,62 @@ const resolveReference = (
   headers,
   data
 ) => {
-  const [headerName, lineNumber] = reference.split(":")
-  if (Number.isFinite(Number.parseFloat(headerName))) return headerName
+  const isFunction = reference.includes("(")
 
-  const referencedRowIndex = lineNumber.startsWith("#")
-    ? rowIndex + Number.parseFloat(lineNumber.slice(1))
-    : lineNumber - 1
+  if (isFunction) {
+    const functionName = reference.substring(0, reference.indexOf("("))
+    const parameters = reference
+      .substring(reference.indexOf("(") + 1, reference.lastIndexOf(")"))
+      .split(";")
+
+    const columnValues = parameters.flatMap((parameter) => {
+      const { headerIndex, lineIndex, value } = parseReference(
+        parameter,
+        columnIndex,
+        rowIndex,
+        headers,
+        data
+      )
+
+      return data.flatMap((line, currentRowIndex) =>
+        rowIndex !== currentRowIndex
+          ? parseCell(
+              line[headerIndex],
+              columnIndex,
+              currentRowIndex,
+              headers,
+              data
+            )
+          : []
+      )
+    })
+    return functionName === "sum"
+      ? columnValues.reduce((sum, value) => sum + value, 0)
+      : 0
+  }
+
+  const { headerIndex, lineIndex, value } = parseReference(
+    reference,
+    columnIndex,
+    rowIndex,
+    headers,
+    data
+  )
+
+  return parseCell(value, headerIndex, lineIndex, headers, data)
+}
+
+const parseReference = (reference, columnIndex, rowIndex, headers, data) => {
+  const [headerName, lineNumber] = reference.split(":")
+  if (Number.isFinite(Number.parseFloat(headerName)))
+    return { value: headerName }
+
+  const referencedRowIndex =
+    lineNumber == null
+      ? undefined
+      : lineNumber.startsWith("#")
+      ? rowIndex + Number.parseFloat(lineNumber.slice(1))
+      : lineNumber - 1
 
   if (referencedRowIndex < 0 || referencedRowIndex >= data.length)
     throw new Error(`Line ${lineNumber} not found`)
@@ -86,13 +138,11 @@ const resolveReference = (
   if (headerIndex < 0 || headerIndex >= headers.length)
     throw new Error(`Header \"${headerName}\" not found`)
 
-  return parseCell(
-    data[referencedRowIndex][headerIndex],
+  return {
     headerIndex,
-    referencedRowIndex,
-    headers,
-    data
-  )
+    lineIndex: referencedRowIndex,
+    value: data[referencedRowIndex] && data[referencedRowIndex][headerIndex],
+  }
 }
 
 module.exports = calculate

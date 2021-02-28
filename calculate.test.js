@@ -180,3 +180,34 @@ test("relative reference to relative reference", () =>
     calculate(["header1", "10", "=#0:#-1", "=#0:#-1"].join("\n")),
     ["header1", "10", "10", "10"].join("\n")
   ))
+
+test("sum function", () =>
+  assertEqual(
+    calculate(
+      [
+        "header1,header2",
+        "10,=#-1:#0",
+        "20,=#-1:#0",
+        "30,=#-1:#0",
+        "=sum(header1),=sum(header2)",
+      ].join("\n")
+    ),
+    ["header1,header2", "10,10", "20,20", "30,30", "60,60"].join("\n")
+  ))
+
+test("sum function relative", () =>
+  assertEqual(
+    calculate(
+      [
+        "header1,header2",
+        "10,=#-1:#0",
+        "20,=#-1:#0",
+        "30,=#-1:#0",
+        "40,=#-1:#0",
+        "=sum(#0:##),=sum(#0:##)",
+      ].join("\n")
+    ),
+    ["header1,header2", "10,10", "20,20", "30,30", "40,40", "100,100"].join(
+      "\n"
+    )
+  ))
