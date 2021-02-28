@@ -110,7 +110,10 @@ const resolveReference = (
     })
 
     return functionName === "sum"
-      ? values.reduce((sum, value) => sum + value, 0)
+      ? values.reduce(
+          (sum, value) => (Number.isFinite(value) ? sum + value : sum),
+          0
+        )
       : 0
   }
 

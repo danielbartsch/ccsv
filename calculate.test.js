@@ -216,3 +216,15 @@ test("sum function relative", () =>
       "100,90",
     ].join("\n")
   ))
+
+test("sum with empty columns", () =>
+  assertEqual(
+    calculate(
+      [
+        ",header1,header2,sum",
+        ",0,=header1:2,=sum(##:#0)",
+        ",10,=header2:1,=sum(##:#0)",
+      ].join("\n")
+    ),
+    [",header1,header2,sum", ",0,10,10", ",10,10,20"].join("\n")
+  ))
