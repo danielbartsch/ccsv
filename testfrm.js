@@ -1,4 +1,4 @@
-let bail = 1
+let testFailures = 0
 const BAIL_THRESHOLD = 1
 
 let suspendedOutput = []
@@ -11,7 +11,7 @@ const test = (name, func, skip = false) => {
     return
   }
   const logHelper = console.log
-  console.log = (...rest) => suspendedOutput.push(...rest)
+  console.log = (...rest) => suspendedOutput.push(...rest, "\n")
   const beginning = Date.now()
   try {
     process.stdout.write(`… ${name}`)
@@ -22,10 +22,10 @@ const test = (name, func, skip = false) => {
   } catch (error) {
     process.stdout.cursorTo(0)
     process.stdout.write(`⨯ ${name} (${Date.now() - beginning}ms)\n`)
-    logHelper(...suspendedOutput)
+    if (suspendedOutput.length > 0) logHelper("\n", ...suspendedOutput)
     console.error(error, "\n\n")
-    bail++
-    if (bail >= BAIL_THRESHOLD) {
+    testFailures++
+    if (testFailures >= BAIL_THRESHOLD) {
       process.exit(1)
     }
   }
