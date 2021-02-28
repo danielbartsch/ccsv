@@ -109,12 +109,28 @@ const resolveReference = (
       }
     })
 
-    return functionName === "sum"
-      ? values.reduce(
+    switch (functionName) {
+      case "sum":
+        return values.reduce(
           (sum, value) => (Number.isFinite(value) ? sum + value : sum),
           0
         )
-      : 0
+      case "len":
+        return values.length
+      case "avg":
+        return (
+          values.reduce(
+            (sum, value) => (Number.isFinite(value) ? sum + value : sum),
+            0
+          ) / values.length
+        )
+      case "min":
+        return Math.min(...values)
+      case "max":
+        return Math.max(...values)
+      default:
+        return 0
+    }
   }
 
   const { headerIndex, lineIndex, value } = parseReference(

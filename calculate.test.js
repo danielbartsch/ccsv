@@ -228,3 +228,21 @@ test("sum with empty columns", () =>
     ),
     [",header1,header2,sum", ",0,10,10", ",10,10,20"].join("\n")
   ))
+
+test("avg len min max", () =>
+  assertEqual(
+    calculate(
+      [
+        ",header1,header2,header3",
+        ",-1,0,1,=header1:2,=min(##:#0)",
+        ",10,=header2:1,=max(##:#0)",
+        "=len(#0:##),=avg(#0:##),,=avg(#0:##)",
+      ].join("\n")
+    ),
+    [
+      ",header1,header2,header3",
+      ",-1,0,1,10,-1",
+      ",10,0,10",
+      "2,4.5,,5.5",
+    ].join("\n")
+  ))
