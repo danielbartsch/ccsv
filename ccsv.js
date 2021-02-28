@@ -2,21 +2,14 @@
 const fs = require("fs")
 const calculate = require("./calculate.js")
 
-const [
-  ,
-  ,
-  inputFilePath,
-  outputFilePath = inputFilePath.replace(".ccsv", ".csv"),
-  separator = ",",
-  ...args
-] = process.argv
+const [, , ...args] = process.argv
 
-if (args.length > 0) {
-  console.log(
-    "First argument: input file\nSecond argument: output file\nThird argument: separator (eg. ',', ';')"
-  )
+if (args.length === 0) {
+  console.log("Add a file to compile")
   process.exit(1)
 }
+
+const [inputFilePath, separator = ","] = args
 
 fs.readFile(inputFilePath, { encoding: "utf8" }, (error, inputFileData) => {
   if (error) {
@@ -24,7 +17,5 @@ fs.readFile(inputFilePath, { encoding: "utf8" }, (error, inputFileData) => {
     process.exit(1)
   }
 
-  fs.writeFile(outputFilePath, calculate(inputFileData, separator), () => {
-    console.log("saved to", outputFilePath)
-  })
+  console.log(calculate(inputFileData, separator))
 })
