@@ -119,14 +119,13 @@ const resolveReference = (
 
     const numberValues = values.filter((value) => Number.isFinite(value))
     switch (functionName) {
-      case "sum":
-        return numberValues.reduce((sum, value) => sum + value, 0)
       case "len":
         return values.length
-      case "avg":
-        return (
-          numberValues.reduce((sum, value) => sum + value, 0) / values.length
-        )
+      case "sum":
+      case "avg": {
+        const sum = numberValues.reduce((sum, value) => sum + value, 0)
+        return functionName === "sum" ? sum : sum / values.length
+      }
       case "min":
         return Math.min(...numberValues)
       case "max":
