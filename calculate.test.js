@@ -53,15 +53,13 @@ test("multiple operators", () =>
     ["a", "100,210", "30,160", "10,30"].join("\n")
   ))
 
-test(
-  "negating",
-  () =>
-    assertEqual(
-      calculate(["a", "30,=-a:1", "0,=a:1"].join("\n")),
-      ["a", "30,-30", "0,30"].join("\n")
+test("negating", () =>
+  assertEqual(
+    calculate(
+      ["a", "=0-20+10,=0+10-20", "=-20+10,=10-20", "=a:2,=-a:2"].join("\n")
     ),
-  true
-)
+    ["a", "-10,-10", "-10,-10", "-10,10"].join("\n")
+  ))
 
 test("numbers", () =>
   assertEqual(

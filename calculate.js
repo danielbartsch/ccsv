@@ -8,7 +8,7 @@ const calculate = (fileData, separator = ",") => {
         result.push(
           line
             .map((cell, columnIndex) =>
-              parseCell(cell, columnIndex, rowIndex, headers, data)
+              parseCell(cell, columnIndex, rowIndex, false, headers, data)
             )
             .join(separator)
         )
@@ -19,11 +19,18 @@ const calculate = (fileData, separator = ",") => {
     .join("\n")
 }
 
-const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
+const parseCell = (
+  cell = "",
+  columnIndex,
+  rowIndex,
+  isNegated,
+  headers,
+  data
+) => {
   if (cell.startsWith("=")) {
     const cellExpression = [
       ["+", "+"],
-      [/(?<!#)-/, "-"],
+      [/(?<!#|^)-/, "-"],
       ["*", "*"],
       ["/", "/"],
     ].reduce(
@@ -47,24 +54,12 @@ const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
     )
 
     if (values.length === 1) {
-      return values[0]
+      return (isNegated ? -1 : 1) * values[0]
     }
-    const threeBuckets = chunk(values, 3).map(([value1, operator, value2]) => {
-      switch (operator) {
-        case "+":
-          return value1 + value2
-        case "-":
-          return value1 - value2
-        case "*":
-          return value1 * value2
-        case "/":
-          return value1 / value2
-        default:
-          return value1
-      }
-    })
 
-    return eval(values.join(""))
+    return eval(
+      (isNegated ? "-(" : "") + values.join("") + (isNegated ? ")" : "")
+    )
   }
   return Number.isFinite(Number.parseFloat(cell))
     ? Number.parseFloat(cell)
@@ -72,22 +67,20 @@ const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
 }
 
 const resolveReference = (
-  reference /* eg. header1:2 */,
+  reference /* eg. header1:2, -header2:1 */,
   columnIndex,
   rowIndex,
   headers,
   data
 ) => {
-  const isFunction = reference.includes("(")
+  const functionMatch = reference.match(/(sum|len|avg|min|max)\((.*)\)/)
 
-  if (isFunction) {
-    const functionName = reference.substring(0, reference.indexOf("("))
-    const parameters = reference
-      .substring(reference.indexOf("(") + 1, reference.lastIndexOf(")"))
-      .split(";")
+  if (functionMatch) {
+    const [, functionName, parametersString] = functionMatch
+    const parameters = parametersString.split(";")
 
     const values = parameters.flatMap((parameter) => {
-      const { headerIndex, lineIndex } = parseReference(
+      const { headerIndex, lineIndex, value, isNegated } = parseReference(
         parameter,
         columnIndex,
         rowIndex,
@@ -102,6 +95,7 @@ const resolveReference = (
                 line[headerIndex],
                 headerIndex,
                 currentRowIndex,
+                isNegated,
                 headers,
                 data
               )
@@ -110,7 +104,14 @@ const resolveReference = (
       } else if (lineIndex != null && headerIndex == null) {
         return data[lineIndex].flatMap((column, currentColumnIndex) =>
           columnIndex !== currentColumnIndex
-            ? parseCell(column, currentColumnIndex, lineIndex, headers, data)
+            ? parseCell(
+                column,
+                currentColumnIndex,
+                lineIndex,
+                isNegated,
+                headers,
+                data
+              )
             : []
         )
       }
@@ -135,7 +136,7 @@ const resolveReference = (
     }
   }
 
-  const { headerIndex, lineIndex, value } = parseReference(
+  const { headerIndex, lineIndex, value, isNegated } = parseReference(
     reference,
     columnIndex,
     rowIndex,
@@ -143,7 +144,7 @@ const resolveReference = (
     data
   )
 
-  return parseCell(value, headerIndex, lineIndex, headers, data)
+  return parseCell(value, headerIndex, lineIndex, isNegated, headers, data)
 }
 
 const parseReference = (reference, columnIndex, rowIndex, headers, data) => {
@@ -161,14 +162,17 @@ const parseReference = (reference, columnIndex, rowIndex, headers, data) => {
   if (referencedRowIndex < 0 || referencedRowIndex >= data.length)
     throw new Error(`Line ${lineNumber} not found`)
 
-  const headerIndex = headerName.startsWith("#")
-    ? columnIndex + Number.parseFloat(headerName.slice(1))
-    : headers.indexOf(headerName)
+  const isNegated = headerName.startsWith("-")
+  const actualHeaderName = isNegated ? headerName.slice(1) : headerName
+  const headerIndex = actualHeaderName.startsWith("#")
+    ? columnIndex + Number.parseFloat(actualHeaderName.slice(1))
+    : headers.indexOf(actualHeaderName)
 
   if (headerIndex < 0 || headerIndex >= headers.length)
-    throw new Error(`Header \"${headerName}\" not found`)
+    throw new Error(`Header \"${actualHeaderName}\" not found`)
 
   return {
+    isNegated,
     headerIndex: Number.isNaN(headerIndex) ? undefined : headerIndex,
     lineIndex: Number.isNaN(referencedRowIndex)
       ? undefined
@@ -178,17 +182,3 @@ const parseReference = (reference, columnIndex, rowIndex, headers, data) => {
 }
 
 module.exports = calculate
-
-function chunk(array, size = 3) {
-  if (array.length === 0) {
-    return []
-  }
-  var index = 0,
-    resIndex = 0,
-    result = Array(Math.ceil(array.length / size))
-
-  while (index < array.length) {
-    result[resIndex++] = array.slice(index, (index += size))
-  }
-  return result
-}
