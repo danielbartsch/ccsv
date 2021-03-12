@@ -276,4 +276,30 @@ test("accumulated sum reverse", () =>
     ].join("\n")
   ))
 
+test("rolling average", () =>
+  assertEqual(
+    calculate(
+      [
+        "number,rollingavg",
+        "5,=avg(number:#0>number:#1)",
+        "10,=avg(number:#-1>number:#1)",
+        "15,=avg(number:#-1>number:#1)",
+        "200,=avg(number:#-1>number:#1)",
+        "0,=avg(number:#-1>number:#1)",
+        "100,=avg(number:#-1>number:#1)",
+        "50,=avg(number:#-1>number:#0)",
+      ].join("\n")
+    ),
+    [
+      "number,rollingavg",
+      "5,7.5",
+      "10,10",
+      "15,75",
+      "200,71.66666666666667",
+      "0,100",
+      "100,50",
+      "50,75",
+    ].join("\n")
+  ))
+
 run()
