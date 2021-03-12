@@ -61,9 +61,7 @@ const parseCell = (
       (isNegated ? "-(" : "") + values.join("") + (isNegated ? ")" : "")
     )
   }
-  return Number.isFinite(Number.parseFloat(cell))
-    ? Number.parseFloat(cell)
-    : cell
+  return cell !== "" && isFinite(cell) ? Number.parseFloat(cell) : cell
 }
 
 const resolveReference = (

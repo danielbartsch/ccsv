@@ -6,6 +6,21 @@ test("no calculations", () => {
   assertEqual(calculate(file), file)
 })
 
+test("don't touch iso date format", () => {
+  const file = [
+    "date",
+    "2021-03-13",
+    "2021-03-14",
+    "2021-03-15",
+    "2021-03-16",
+    "2021-03-17",
+    "2021-03-18",
+    "2021-03-19",
+    "2021-03-20",
+  ].join("\n")
+  assertEqual(calculate(file), file)
+})
+
 test("cell assignment", () =>
   assertEqual(
     calculate(
