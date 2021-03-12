@@ -92,11 +92,19 @@ const run = () => {
       `running ${testsToRun.length}/${tests.length} tests (filtering for '${testFilter}')`
     )
   }
+  let testsRan = 0
   try {
-    testsToRun.forEach(([name, execute]) => execute())
+    testsToRun.forEach(([name, execute]) => {
+      testsRan++
+      execute()
+    })
   } catch (e) {
   } finally {
-    console.log(`Execution time ${Date.now() - beginning}ms`)
+    console.log(
+      `\nExecution time ${Date.now() - beginning}ms (${testsRan}${
+        testsRan !== testsToRun.length ? `/${testsToRun.length}` : ""
+      } tests)`
+    )
   }
 }
 
