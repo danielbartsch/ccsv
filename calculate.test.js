@@ -171,4 +171,12 @@ test("functions with operators", () =>
     ["a", "10", "20", "30", "120"].join("\n")
   ))
 
+test("sum with separator", () =>
+  assertEqual(
+    calculate(
+      ["sum", "100", "-9", "-20", "-30", "-10", "---", "=sum(sum)"].join("\n")
+    ),
+    ["sum", "100", "-9", "-20", "-30", "-10", "---", "31"].join("\n")
+  ))
+
 run()
