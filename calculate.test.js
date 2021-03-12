@@ -179,4 +179,86 @@ test("sum with separator", () =>
     ["sum", "100", "-9", "-20", "-30", "-10", "---", "31"].join("\n")
   ))
 
+test("accumulated sum", () =>
+  assertEqual(
+    calculate(
+      [
+        "transaction,sum",
+        "100,=sum(transaction:#0>transaction:1)",
+        "-9,=sum(transaction:#0>transaction:1)",
+        "-5,=sum(transaction:#0>transaction:1)",
+        "-20,=sum(transaction:#0>transaction:1)",
+        "-30,=sum(transaction:#0>transaction:1)",
+        "-10,=sum(transaction:#0>transaction:1)",
+        "-5,=sum(transaction:#0>transaction:1)",
+        "100,=sum(transaction:#0>transaction:1)",
+        "-10,=sum(transaction:#0>transaction:1)",
+        "-20,=sum(transaction:#0>transaction:1)",
+        "-40,=sum(transaction:#0>transaction:1)",
+        "-30,=sum(transaction:#0>transaction:1)",
+        "100,=sum(transaction:#0>transaction:1)",
+        "-50,=sum(transaction:#0>transaction:1)",
+        "=sum(transaction)",
+      ].join("\n")
+    ),
+    [
+      "transaction,sum",
+      "100,100",
+      "-9,91",
+      "-5,86",
+      "-20,66",
+      "-30,36",
+      "-10,26",
+      "-5,21",
+      "100,121",
+      "-10,111",
+      "-20,91",
+      "-40,51",
+      "-30,21",
+      "100,121",
+      "-50,71",
+      "71",
+    ].join("\n")
+  ))
+
+test("accumulated sum reverse", () =>
+  assertEqual(
+    calculate(
+      [
+        "transaction,reverse_sum",
+        "100,=sum(transaction:#0>transaction:14)",
+        "-9,=sum(transaction:#0>transaction:14)",
+        "-5,=sum(transaction:#0>transaction:14)",
+        "-20,=sum(transaction:#0>transaction:14)",
+        "-30,=sum(transaction:#0>transaction:14)",
+        "-10,=sum(transaction:#0>transaction:14)",
+        "-5,=sum(transaction:#0>transaction:14)",
+        "100,=sum(transaction:#0>transaction:14)",
+        "-10,=sum(transaction:#0>transaction:14)",
+        "-20,=sum(transaction:#0>transaction:14)",
+        "-40,=sum(transaction:#0>transaction:14)",
+        "-30,=sum(transaction:#0>transaction:14)",
+        "100,=sum(transaction:#0>transaction:14)",
+        "-50,=sum(transaction:#0>transaction:14)",
+      ].join("\n")
+    ),
+    [
+      "transaction,reverse_sum",
+      "100,71",
+      "-9,-29",
+      "-5,-20",
+      "-20,-15",
+      "-30,5",
+      "-10,35",
+      "-5,45",
+      "100,50",
+      "-10,-50",
+      "-20,-40",
+      "-40,-20",
+      "-30,20",
+      "100,50",
+      "-50,-50",
+    ].join("\n")
+  ))
+
 run()

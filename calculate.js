@@ -80,7 +80,35 @@ const resolveReference = (
     const parameters = parametersString.split(";")
 
     const values = parameters.flatMap((parameter) => {
-      const { headerIndex, lineIndex, value, isNegated } = parseReference(
+      const isRange = parameter.includes(">")
+      if (isRange) {
+        const [from, to] = parameter.split(">")
+
+        const [fromInfo, toInfo] = [
+          parseReference(from, columnIndex, rowIndex, headers, data),
+          parseReference(to, columnIndex, rowIndex, headers, data),
+        ]
+
+        const fromIndex = Math.min(fromInfo.lineIndex, toInfo.lineIndex)
+        const toIndex = Math.max(fromInfo.lineIndex, toInfo.lineIndex)
+
+        const rangeValues = data.flatMap((line, currentRowIndex) =>
+          currentRowIndex >= fromIndex && currentRowIndex <= toIndex
+            ? parseCell(
+                line[fromInfo.headerIndex],
+                fromInfo.headerIndex,
+                currentRowIndex,
+                false,
+                headers,
+                data
+              )
+            : []
+        )
+
+        return rangeValues
+      }
+
+      const { headerIndex, lineIndex, isNegated } = parseReference(
         parameter,
         columnIndex,
         rowIndex,
