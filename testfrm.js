@@ -34,10 +34,13 @@ const test = (name, func, skip = false) => {
         console.error(error, "\n\n")
         testFailures++
         if (testFailures >= BAIL_THRESHOLD) {
-          process.exit(1)
+          throw new Error(
+            `${testFailures} tests failed. Not continuing with other tests, because that's more than the defined ${BAIL_THRESHOLD}`
+          )
         }
+      } finally {
+        console.log = logHelper
       }
-      console.log = logHelper
     },
   ])
 }
@@ -82,13 +85,19 @@ const assertError = (func) => {
 }
 
 const run = () => {
+  const beginning = Date.now()
   const testsToRun = tests.filter(([name]) => name.includes(testFilter))
   if (testFilter) {
     console.log(
       `running ${testsToRun.length}/${tests.length} tests (filtering for '${testFilter}')`
     )
   }
-  testsToRun.forEach(([name, execute]) => execute())
+  try {
+    testsToRun.forEach(([name, execute]) => execute())
+  } catch (e) {
+  } finally {
+    console.log(`Execution time ${Date.now() - beginning}ms`)
+  }
 }
 
 module.exports = {
