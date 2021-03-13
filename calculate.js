@@ -20,30 +20,28 @@ const calculate = (fileData, separator = ",") => {
 }
 
 const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
-  if (cell.startsWith("=")) {
-    const cellReferenceRegex = new RegExp(
-      `((${headers.join(
-        "|"
-      )})|(#-?[0-9]+)):(([0-9]+)|(#-?[0-9]+))|((sum|len|avg|min|max)\\(.*\\))`,
-      "g"
-    )
-
-    const match = cell.match(cellReferenceRegex)
-    const resolvedReferenceCell = (match || [])
-      .reduce(
-        (acc, expression) =>
-          acc.replaceAll(
-            expression,
-            resolveReference(expression, columnIndex, rowIndex, headers, data)
-          ),
-        cell
-      )
-      .slice(1)
-      .replace(/--/g, "")
-
-    return eval(resolvedReferenceCell)
+  if (!cell.startsWith("=")) {
+    return cell !== "" && isFinite(cell) ? Number.parseFloat(cell) : cell
   }
-  return cell !== "" && isFinite(cell) ? Number.parseFloat(cell) : cell
+  const cellReferenceRegex = new RegExp(
+    `(([A-Za-z0-9]\+)|(#-?[0-9]+)):(([0-9]+)|(#-?[0-9]+))|((sum|len|avg|min|max)\\(.*\\))`,
+    "g"
+  )
+
+  const cellExpression = cell.slice(1)
+  const match = cellExpression.match(cellReferenceRegex)
+  const resolvedReferenceCell = (match || [])
+    .reduce(
+      (acc, expression) =>
+        acc.replaceAll(
+          expression,
+          resolveReference(expression, columnIndex, rowIndex, headers, data)
+        ),
+      cellExpression
+    )
+    .replace(/--/g, "")
+
+  return eval(resolvedReferenceCell)
 }
 
 const resolveReference = (

@@ -47,14 +47,10 @@ test("parenthesis", () =>
     ].join("\n")
   ))
 
-test(
-  "wrong reference",
-  () =>
-    assertError(() =>
-      calculate(["a,b", "0,10,=a:1", "10,0,=c:2", "10,0,=a:2"].join("\n"))
-    ),
-  true
-)
+test("wrong reference", () =>
+  assertError(() =>
+    calculate(["a,b", "0,10,=a:1", "10,0,=c:2", "10,0,=a:2"].join("\n"))
+  ))
 
 test("sum", () =>
   assertEqual(
