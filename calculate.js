@@ -24,12 +24,13 @@ const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
     return cell !== "" && isFinite(cell) ? Number.parseFloat(cell) : cell
   }
   const cellReferenceRegex = new RegExp(
-    `(([A-Za-z0-9]\+)|(#-?[0-9]+)):(([0-9]+)|(#-?[0-9]+))|((sum|len|avg|min|max)\\(.*\\))`,
+    `((${headers.join(
+      "|"
+    )})|(#-?[0-9]+)):(([0-9]+)|(#-?[0-9]+))|((sum|len|avg|min|max)\\(.*\\))`,
     "g"
   )
 
-  const cellExpression = cell.slice(1)
-  const match = cellExpression.match(cellReferenceRegex)
+  const match = cell.match(cellReferenceRegex)
   const resolvedReferenceCell = (match || [])
     .reduce(
       (acc, expression) =>
@@ -37,8 +38,9 @@ const parseCell = (cell = "", columnIndex, rowIndex, headers, data) => {
           expression,
           resolveReference(expression, columnIndex, rowIndex, headers, data)
         ),
-      cellExpression
+      cell
     )
+    .slice(1)
     .replace(/--/g, "")
 
   return eval(resolvedReferenceCell)

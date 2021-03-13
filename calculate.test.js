@@ -47,9 +47,46 @@ test("parenthesis", () =>
     ].join("\n")
   ))
 
-test("wrong reference", () =>
+test(
+  "wrong reference",
+  () =>
+    assertError(() =>
+      calculate(["a,b", "0,10,=a:1", "10,0,=c:2", "10,0,=a:2"].join("\n"))
+    ),
+  true
+)
+
+test("wrong reference result", () =>
+  assertEqual(
+    calculate(["a,b", "0,10,=a:1", "10,0,=c:2", "10,0,=a:2"].join("\n")),
+    ["a,b", "0,10,0", "10,0,2" /* the 2 shouldn't be there */, "10,0,10"].join(
+      "\n"
+    )
+  ))
+
+test("complex header name reference", () =>
+  assertEqual(
+    calculate(
+      [
+        "header name with spaces,header_with__;stuff-",
+        "0,10,=header name with spaces:#0",
+        "20,30,=header_with__;stuff-:#0",
+      ].join("\n")
+    ),
+    ["header name with spaces,header_with__;stuff-", "0,10,0", "20,30,30"].join(
+      "\n"
+    )
+  ))
+
+test("header names with regex special characters", () =>
   assertError(() =>
-    calculate(["a,b", "0,10,=a:1", "10,0,=c:2", "10,0,=a:2"].join("\n"))
+    calculate(
+      [
+        "headerWith$DollarSign,HeaderWith+PlusSign",
+        "0,10,=headerWith$DollarSign:#0",
+        "20,30,=HeaderWith+PlusSign:#0",
+      ].join("\n")
+    )
   ))
 
 test("sum", () =>
