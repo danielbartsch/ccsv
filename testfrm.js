@@ -1,8 +1,6 @@
-let testFailures = 0
-
 const [, , testFilter = ""] = process.argv
 
-const BAIL_THRESHOLD = Number.parseInt(process.env.BAIL) || 1
+const BAIL_THRESHOLD = Number.parseInt(process.env.BAIL) || 0
 
 let suspendedOutput = []
 
@@ -14,10 +12,6 @@ const test = (name, func, skip = false) => {
   tests.push([
     name,
     () => {
-      if (skip) {
-        process.stdout.write(`◌ ${name}\n`)
-        return
-      }
       const logHelper = console.log
       console.log = (...rest) => suspendedOutput.push(...rest, "\n")
       const beginning = Date.now()
@@ -27,21 +21,18 @@ const test = (name, func, skip = false) => {
         process.stdout.cursorTo(0)
         process.stdout.write(`● ${name} (${Date.now() - beginning}ms)\n`)
         suspendedOutput = []
+        return "pass"
       } catch (error) {
         process.stdout.cursorTo(0)
         process.stdout.write(`⨯ ${name} (${Date.now() - beginning}ms)\n`)
         if (suspendedOutput.length > 0) logHelper("\n", ...suspendedOutput)
         console.error(error, "\n\n")
-        testFailures++
-        if (testFailures >= BAIL_THRESHOLD) {
-          throw new Error(
-            `${testFailures} tests failed. Not continuing with other tests, because that's more than the defined ${BAIL_THRESHOLD}`
-          )
-        }
+        return "failure"
       } finally {
         console.log = logHelper
       }
     },
+    skip,
   ])
 }
 
@@ -92,18 +83,39 @@ const run = () => {
       `running ${testsToRun.length}/${tests.length} tests (filtering for '${testFilter}')`
     )
   }
-  let testsRan = 0
+  let testsPassed = 0
+  let testsFailed = 0
+  let testsSkipped = 0
+  let interruptedTests = false
   try {
-    testsToRun.forEach(([name, execute]) => {
-      testsRan++
-      execute()
+    testsToRun.forEach(([name, execute, skip]) => {
+      if (skip) {
+        testsSkipped++
+        process.stdout.write(`◌ ${name}\n`)
+      } else {
+        if (execute() === "failure") {
+          testsFailed++
+          if (testsFailed > BAIL_THRESHOLD) {
+            interruptedTests = true
+            throw new Error()
+          }
+        } else {
+          testsPassed++
+        }
+      }
     })
   } catch (e) {
   } finally {
     console.log(
-      `\nExecution time ${Date.now() - beginning}ms (${testsRan}${
-        testsRan !== testsToRun.length ? `/${testsToRun.length}` : ""
-      } tests)`
+      `\n${
+        interruptedTests
+          ? `INTERRUPTED tests by failure (allowed failed tests: ${BAIL_THRESHOLD}. failed tests: ${testsFailed})\n\n`
+          : ""
+      }Tests: ${
+        testsFailed > 0 ? `${testsFailed} failed, ` : ""
+      }${testsPassed} passed, ${
+        testsSkipped > 0 ? `${testsSkipped} skipped, ` : ""
+      }${testsToRun.length} total\nTime:  ${Date.now() - beginning}ms`
     )
   }
 }
