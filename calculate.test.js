@@ -29,10 +29,32 @@ test("cell assignment", () =>
     ["a,b", "0,10,0", "10,0,10", "0,10,10", "10,0,0"].join("\n")
   ))
 
-test("wrong reference", () =>
-  assertError(() =>
-    calculate(["a,b", "0,10,=a:1", "10,0,=c:2", "10,0,=a:2"].join("\n"))
+test("parenthesis", () =>
+  assertEqual(
+    calculate(
+      [
+        "fraction,full,percentage",
+        "10,100,=(fraction:#0/full:#0)*100",
+        "50,50,=(fraction:#0/full:#0)*100",
+        "100,90,=(fraction:#0/full:#0)*100",
+      ].join("\n")
+    ),
+    [
+      "fraction,full,percentage",
+      "10,100,10",
+      "50,50,100",
+      "100,90,111.11111111111111",
+    ].join("\n")
   ))
+
+test(
+  "wrong reference",
+  () =>
+    assertError(() =>
+      calculate(["a,b", "0,10,=a:1", "10,0,=c:2", "10,0,=a:2"].join("\n"))
+    ),
+  true
+)
 
 test("sum", () =>
   assertEqual(
